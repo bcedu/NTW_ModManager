@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=ntw3_hb_setup
+Exec=ntw3_hb_setup
+Terminal=false
+Type=Application
+Categories=GTK;
+StartupNotify=true

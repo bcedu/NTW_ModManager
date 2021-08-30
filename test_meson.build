@@ -1,0 +1,69 @@
+project('com.github.bcedu.ntw3_hb_setup', 'c', 'vala', version: '1.0.0')
+
+gnome = import('gnome')
+i18n = import('i18n')
+
+# Set our translation domain
+add_project_arguments(
+	'-DGETTEXT_PACKAGE="@0@"'.format (meson.project_name()),
+	language:'c'
+)
+
+# Install files listed in gresources
+asresources = gnome.compile_resources(
+	'as-resources',
+	join_paths('data', 'resources', meson.project_name() + '.gresource.xml'),
+	source_dir: 'data',
+	c_name: 'as'
+)
+
+
+
+srcs = files([
+    'src/configs/Constants.vala',
+    'src/configs/Settings.vala',
+    'src/widgets/HeaderBar.vala',
+    'src/views/AppView.vala',
+    'src/views/View1.vala',
+    'src/views/View2.vala',
+    'src/views/ViewConf.vala',
+    'src/controllers/ViewController.vala',
+    'src/controllers/AppController.vala',
+    'src/Application.vala',
+    'src/Window.vala',
+    'src/ModManager.vala',
+    'tests/test.vala',
+    'tests/ntw3_hb_setup_tests.vala'
+])
+
+
+# Dependences
+deps = [
+    dependency('gobject-2.0'),
+    dependency('glib-2.0'),
+    dependency('gtk+-3.0'),
+    dependency('granite'),
+    dependency('gee-0.8'),
+    meson.get_compiler('vala').find_library('posix')
+]
+
+
+libunity_dep = dependency('unity', required : false)
+if libunity_dep.found()
+    add_project_arguments('-D', 'LIBUNITY', language: 'vala')
+    deps += [libunity_dep]
+endif
+
+executable(
+    meson.project_name(),
+    srcs,
+    asresources,
+    dependencies: deps,
+    install: true
+)
+
+subdir('data')
+
+meson.add_install_script('meson/post_install.py')
+
+
