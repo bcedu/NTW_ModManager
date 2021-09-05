@@ -36,7 +36,7 @@ namespace App.Controllers {
             this.application = application;
             // init the mod manager if we have default path
             string default_path = this.get_default_path();
-            if (default_path != "") this.modmanager = new ModManager(default_path);
+            if (default_path != "") this.modmanager = new ModManager.with_mods_path(default_path, default_path+"/mods");
             // Create the main window
             this.window = new AppWindow (this.application);
             this.application.add_window (this.window);
