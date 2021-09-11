@@ -61,11 +61,11 @@ public class ModManager {
         this.data_path = game_path + "/data";
         this.mods_path = mods_path;
         this.mod_list = new Gee.ArrayList<Mod> ();
+        this.game_pack_files = this.get_default_game_pack_files();
+        this.excluded_mod_list = this.get_default_excluded_mod_files();
         if (autoscan) {
             this.update_mods_list();
         }
-        this.game_pack_files = this.get_default_game_pack_files();
-        this.excluded_mod_list = this.get_default_excluded_mod_files();
     }
 
 
@@ -88,12 +88,13 @@ public class ModManager {
 
     public void update_mods_list() {
     // Updates the list of mods stored in "this.mod_list" with the mods found in "this.mods_path"
-        this.update_mods_list_from_path(this.game_path);
+        this.update_mods_list_from_path(this.mods_path);
     }
 
     public void update_mods_list_from_path(string path) {
     // Updates the list of mods stored in this.mod_list with the mods found in "path"
         Gee.ArrayList<string> modlist = this.get_mods_list_from_path(path);
+        this.mod_list = new Gee.ArrayList<Mod> ();
         int i = 0;
         foreach (string mod in modlist) {
             this.mod_list.add(new Mod(mod, i));
@@ -151,6 +152,8 @@ public class ModManager {
     }
 
     public Gee.ArrayList<string> get_default_excluded_mod_files() {
+    // TODO
+    // TOTEST
     // Returns an ArrayList with theexcluded mods.
         Gee.ArrayList<string> aux = new Gee.ArrayList<string> ();
         return aux;

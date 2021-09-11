@@ -9,10 +9,12 @@ class TestNTW : Gee.TestCase {
         // assign a name for this class
         base("TestNTW");
         // add test methods
-        add_test(" * Test default mods and data path (test_default_mods_and_data_path)", test_default_mods_and_data_path);
-        add_test(" * Test no mod is detected as all files are from game (test_get_mods_list_from_path_no_packs_found)", test_get_mods_list_from_path_no_packs_found);
-        add_test(" * Test some mods are detected (test_get_mods_list_from_path_some_packs_found)", test_get_mods_list_from_path_some_packs_found);
-        add_test(" * Test some mods are detected ignoring game files (test_get_mods_list_from_path_ignores_game_files)", test_get_mods_list_from_path_ignores_game_files);
+        add_test(" * (test_default_mods_and_data_path) Test default mods and data path", test_default_mods_and_data_path);
+        add_test(" * (test_get_mods_list_from_path_no_packs_found) Test no mod is detected as all files are from game", test_get_mods_list_from_path_no_packs_found);
+        add_test(" * (test_get_mods_list_from_path_some_packs_found) Test some mods are detected", test_get_mods_list_from_path_some_packs_found);
+        add_test(" * (test_get_mods_list_from_path_ignores_game_files) Test some mods are detected ignoring game files", test_get_mods_list_from_path_ignores_game_files);
+        add_test(" * (test_update_mods_list) Test mods list is build from mods path", test_update_mods_list);
+        add_test(" * (test_update_mods_list_autoscan) Test mods list is build on constructor", test_update_mods_list_autoscan);
     }
 
     public override void set_up () {
@@ -57,16 +59,34 @@ class TestNTW : Gee.TestCase {
         Gee.ArrayList<string> aux = this.modmanager.get_mods_list_from_path(this.modmanager.mods_path);
         assert (aux.size == 3);
         Gee.ArrayList<string> expected = new Gee.ArrayList<string>();
-        expected.add("mods/this_is_a_mods.pack");
-        expected.add("mods/this_is_a_mods_2.pack");
-        expected.add("mods/this_is_a_mods_3.pack");
+        expected.add("mods/this_is_a_mod.pack");
+        expected.add("mods/this_is_a_mod_2.pack");
+        expected.add("mods/this_is_a_mod_3.pack");
+        for (int i = 0; i < expected.size; i++) {
+            assert(expected.get(i) == aux.get(i));
+        }
     }
 
     public void test_get_mods_list_from_path_ignores_game_files() {
         Gee.ArrayList<string> aux = this.modmanager.get_mods_list_from_path(this.modmanager.data_path);
         assert (aux.size == 1);
         Gee.ArrayList<string> expected = new Gee.ArrayList<string>();
-        expected.add("mods/this_is_a_mods_4.pack");
+        expected.add("this_is_a_mod_4.pack");
+        for (int i = 0; i < expected.size; i++) {
+            assert(expected.get(i) == aux.get(i));
+        }
+    }
+
+    public void test_update_mods_list() {
+        assert (this.modmanager.mods_path == this.modmanager.game_path+"/data/mods");
+        this.modmanager.update_mods_list();
+        assert (this.modmanager.mod_list.size == 3);
+    }
+
+    public void test_update_mods_list_autoscan() {
+        assert (this.modmanager.mods_path == this.modmanager.game_path+"/data/mods");
+        this.modmanager = new ModManager(this.fixtures_path+"/Napoleon Total War", true);
+        assert (this.modmanager.mod_list.size == 3);
     }
 
 }
