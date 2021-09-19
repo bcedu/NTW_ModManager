@@ -19,14 +19,23 @@
 
 public class Mod {
 
-    string path;
-    int order;
-    File mod_file;
+    public string path;
+    public string name;
+    public string normalized_name;
+    public int order;
+    public File mod_file;
 
     public Mod (string path, int order = 0) {
         this.path = path;
         this.order = order;
         this.mod_file = File.new_for_path(path);
+        this.name = this.mod_file.get_basename ();
+        this.normalized_name = this.normalize_mod_name_for_linux(this.name);
+    }
+
+    public string normalize_mod_name_for_linux(string st) {
+    // Returns a copy of "st" normalized for linux. Bassiclly is lowercased and with underscope. Mods names in linux must be lowercase.
+        return st.strip().normalize().down().replace(" ", "_");
     }
 
     public string get_relative_path(string data_path) {
@@ -42,12 +51,120 @@ public class Mod {
         if (aux.length < 1) return false;
         return aux[aux.length -1] == "pack";
     }
+
+    public bool check_is_installed(string data_path) {
+    // Check if this is installed in "data_path".
+    // A Mod is installed if there is a file in the "data_path" with "this.normalized_name"
+        File data_file = File.new_for_path (data_path);
+        if (!data_file.query_exists()) return false;
+        FileEnumerator enumerator = data_file.enumerate_children ("standard::*", FileQueryInfoFlags.NONE, null);
+        FileInfo child_file_info = null;
+
+        while (((child_file_info = enumerator.next_file (null)) != null)) {
+            if (child_file_info.get_name() == this.normalized_name) return true;
+        }
+        return false;
+    }
+
+    public bool install(string data_path, string user_script_path) {
+    // Installs "this" in "data_path". Installing means creating a symbolinc ling from "this" inside "data_mod" using the "this.normalized_name".
+    // Then, "this.normalized_name" is writed in "user_script_path" file.
+    // Calling install with an already installed mod does nothing.
+        File data_file = File.new_for_path (data_path);
+        if (!data_file.query_exists()) {
+            string err = "Error: directory '"+data_path+"' does not exist, the mod '"+this.name+"'can not be installed.";
+            throw new Error(Quark.from_string(err), -1, err);
+        } else if (!this.check_is_installed(data_path)) {
+            File new_mod_file = File.new_for_path (data_path+"/"+this.normalized_name);
+            new_mod_file.make_symbolic_link(this.path);
+        }
+        this.add_user_scripts_line(user_script_path);
+        return this.check_is_installed(data_path);
+    }
+
+    public bool uninstall(string data_path, string user_script_path) {
+    // Uninstalls "this" from "data_path". Uninstalling means deleting a symbolinc link from "this" inside "data_path" using the "this.normalized_name".
+    // Then, "this..normalized_name" is deleted from "user_script_path" file.
+    // Calling uninstall_mode with an already uninstalled mod does nothing.
+    // If the file foun in "data_path" is not a symbolic link, it can not be uninstalled
+    // Returns true if "this" can be uinstalled. Otherwise returns false
+        File data_file = File.new_for_path (data_path);
+        if (!data_file.query_exists()) {
+            string err = "Error: directory '"+data_path+"' does not exist, the mod '"+this.name+"'can not be uninstalled.";
+            throw new Error(Quark.from_string(err), -1, err);
+        } else if (this.check_is_installed(data_path)) {
+            File new_mod_file = File.new_for_path (data_path+"/"+this.normalized_name);
+            FileInfo info = new_mod_file.query_info("standard::*", FileQueryInfoFlags.NOFOLLOW_SYMLINKS);
+            if (!info.get_is_symlink()) {
+                string err = "Error: mod '"+this.name+"' can not be uninstalled because it is not a symbolic link.";
+                throw new Error(Quark.from_string(err), -1, err);
+            }
+            new_mod_file.delete(null);
+        }
+        this.remove_user_scripts_line(user_script_path);
+        return !this.check_is_installed(data_path);
+    }
+
+    public void add_user_scripts_line(string user_script_path) {
+    // Adds the line "mod this.normalized_name" to the file "user_script_path" if it is not already there
+        File user_file = File.new_for_path (user_script_path);
+        if (!user_file.query_exists()) {
+            string err = "Error: file '"+user_script_path+"' does not exist, the mod '"+this.name+"'can not be installed.";
+            throw new Error(Quark.from_string(err), -1, err);
+        } else {
+            FileIOStream iostream = user_file.open_readwrite ();
+            DataInputStream reader = new DataInputStream (iostream.input_stream);
+            string? line = null;
+            string to_write = "mod "+this.normalized_name+";";
+            bool found = false;
+	        while ((line = reader.read_line ()) != null) {
+	            if (line == to_write) found = true;
+	        }
+	        if (!found) {
+	            iostream.seek (0, SeekType.END);
+		        OutputStream ostream = iostream.output_stream;
+		        DataOutputStream dostream = new DataOutputStream (ostream);
+		        dostream.put_string (to_write+"\n");
+	        }
+        }
+    }
+
+    public void remove_user_scripts_line(string user_script_path) {
+    // Removes the line "mod this.normalized_name" to the file "user_script_path" if it is already there
+        File user_file = File.new_for_path (user_script_path);
+        if (!user_file.query_exists()) {
+            string err = "Error: file '"+user_script_path+"' does not exist, the mod '"+this.name+"'can not be uninstalled.";
+            throw new Error(Quark.from_string(err), -1, err);
+        } else {
+            FileIOStream iostream = user_file.open_readwrite ();
+            DataInputStream reader = new DataInputStream (iostream.input_stream);
+            string? line = null;
+            string to_write = "mod "+this.normalized_name+";";
+            bool found = false;
+            string all_content = "";
+	        while ((line = reader.read_line ()) != null) {
+	            if (line == to_write) found = true;
+	            all_content += line+"\n";
+	        }
+	        if (found) {
+	            all_content = all_content.replace(to_write+"\n", "");
+	            all_content = all_content.replace(to_write, "");
+	            FileOutputStream ostream = user_file.replace (null, false, FileCreateFlags.NONE);
+		        DataOutputStream dostream = new DataOutputStream (ostream);
+		        dostream.put_string (all_content);
+	        }
+        }
+    }
+
 }
 
 public class ModManager {
     public string game_path;
     public string data_path;
     public string mods_path;
+    public string preferences_script_path;
+    public string user_script_path;
+    public string game_name;
     public Gee.ArrayList<Mod> mod_list;
     public Gee.ArrayList<string> game_pack_files;
     public Gee.ArrayList<string> excluded_mod_list;
@@ -57,9 +174,28 @@ public class ModManager {
     }
 
     public ModManager.with_mods_path (string game_path, string mods_path, bool autoscan = true) {
+        this.with_mods_and_scripts_path(game_path, mods_path, null, autoscan);
+    }
+
+    public ModManager.with_scripts_path (string game_path, string scripts_path, bool autoscan = true) {
+        this.with_mods_and_scripts_path(game_path, game_path+"/data/mods", scripts_path, autoscan);
+    }
+
+    public ModManager.with_mods_and_scripts_path (string game_path, string mods_path, string? scripts_path, bool autoscan = true) {
         this.game_path = game_path;
         this.data_path = game_path + "/data";
         this.mods_path = mods_path;
+        this.game_name = File.new_for_path(game_path).get_basename ();
+
+        string aux = this.get_default_scripts_path();
+        if (scripts_path != null) aux = scripts_path;
+        this.preferences_script_path = aux+"/preferences.script.txt";
+        this.user_script_path = aux+"/user.script.txt";
+        File file = File.new_for_path (user_script_path);
+        if (!file.query_exists() && file.get_parent() != null && file.get_parent().query_exists()) {
+            file.create(FileCreateFlags.NONE);
+        }
+
         this.mod_list = new Gee.ArrayList<Mod> ();
         this.game_pack_files = this.get_default_game_pack_files();
         this.excluded_mod_list = this.get_default_excluded_mod_files();
@@ -68,6 +204,9 @@ public class ModManager {
         }
     }
 
+    public string get_default_scripts_path() {
+        return Environment.get_home_dir()+".Creative Assembly/"+this.game_name+"/scripts";
+    }
 
     public void set_game_path(string path) {
         this.game_path = path;
@@ -76,7 +215,6 @@ public class ModManager {
     public string get_game_path() {
         return this.game_path;
     }
-
 
     public void set_mods_path(string path) {
         this.mods_path = path;
@@ -116,7 +254,6 @@ public class ModManager {
         Mod mod;
         FileEnumerator enumerator = file.enumerate_children ("standard::*", FileQueryInfoFlags.NONE, null);
         FileInfo child_file_info = null;
-        string relative_path;
 
         while (((child_file_info = enumerator.next_file (null)) != null)) {
             mod = new Mod(path+"/"+child_file_info.get_name());
@@ -168,6 +305,29 @@ public class ModManager {
         bool is_excluded_file = this.excluded_mod_list.contains(mod.get_relative_path(this.data_path));
         bool is_valid_mod = mod.is_valid();
         return is_game_file || is_excluded_file || !is_valid_mod;
+    }
+
+    public bool check_mod_is_installed(Mod mod) {
+    // Check if the mod is installed.
+    // A Mod is installed if there is a file in the "this.data_path" with "mod.normalized_name"
+        return mod.check_is_installed(this.data_path);
+    }
+
+    public bool install_mod(Mod mod) {
+    // Installs "mod" in "this.data_path". Installing means creating a symbolinc link from "mod" inside "this.data_path" using the "mod.normalized_name".
+    // Then, "mod.normalized_name" is writed in "this.user_script_path" file.
+    // Calling install_mode with an already installed mod does nothing.
+    // Returns true if "mod" can be installed. Otherwise returns false
+        return mod.install(this.data_path, this.user_script_path);
+    }
+
+    public bool uninstall_mod(Mod mod) {
+    // Uninstalls "mod" from "this.data_path". Uninstalling means deleting a symbolinc link from "mod" inside "this.data_path" using the "mod.normalized_name".
+    // Then, "mod.normalized_name" is deleted from "this.user_script_path" file.
+    // Calling uninstall_mode with an already uninstalled mod does nothing.
+    // If the file foun in "this.data_path" is not a symbolic link, it can not be uninstalled
+    // Returns true if "mod" can be uinstalled. Otherwise returns false
+        return mod.uninstall(this.data_path, this.user_script_path);
     }
 
 }
