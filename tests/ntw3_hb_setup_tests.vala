@@ -17,6 +17,7 @@ class TestNTW : Gee.TestCase {
         add_test(" * (test_update_mods_list_autoscan) Test mods list is build on constructor", test_update_mods_list_autoscan);
         add_test(" * (test_check_is_installed) Test check if a Mod is installed in a path", test_check_is_installed);
         add_test(" * (test_install_mod_uninstall_mod) Test install a mod an uninstall it", test_install_mod_uninstall_mod);
+        add_test(" * (test_sort_mod_list) Test sort mod_list by order", test_sort_mod_list);
     }
 
     public override void set_up () {
@@ -69,8 +70,8 @@ class TestNTW : Gee.TestCase {
         assert (aux.game_name == "Napoleon Total War");
         assert (aux.mods_path == aux.game_path+"/data/mods");
         assert (aux.data_path == aux.game_path+"/data");
-        assert (aux.preferences_script_path == Environment.get_home_dir()+".Creative Assembly/Napoleon Total War/scripts/preferences.script.txt");
-        assert (aux.user_script_path == Environment.get_home_dir()+".Creative Assembly/Napoleon Total War/scripts/user.script.txt");
+        assert (aux.preferences_script_path == Environment.get_home_dir()+"/.Creative Assembly/Napoleon Total War/scripts/preferences.script.txt");
+        assert (aux.user_script_path == Environment.get_home_dir()+"/.Creative Assembly/Napoleon Total War/scripts/user.script.txt");
     }
 
     public void test_get_mods_list_from_path_no_packs_found() {
@@ -174,5 +175,14 @@ class TestNTW : Gee.TestCase {
         assert (uninstalled == true);
         assert_strings("".data, get_fixture_content ("/scripts/user.script.txt", false));
     }
-
+    public void test_sort_mod_list() {
+        this.modmanager.update_mods_list();
+        // Mirem quin es l'ultim i ens el guardem
+        Mod last_mod = this.modmanager.mod_list[2];
+        // Li posem un ordre perque sigui el primer
+        last_mod.order = -1;
+        // Ordenem els mods perque sigui el primer
+        this.modmanager.sort_mod_list();
+        assert(this.modmanager.mod_list[0] == last_mod);
+    }
 }

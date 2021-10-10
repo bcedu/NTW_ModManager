@@ -23,14 +23,25 @@ public class Mod {
     public string name;
     public string normalized_name;
     public int order;
+    public bool installed;
     public File mod_file;
 
+    // UI elements
+    public Gtk.Switch installed_switch;
+    public Gtk.Entry order_entry;
+    public Gtk.Label name_label;
+
     public Mod (string path, int order = 0) {
+        this.with_data_path(path, order, null);
+    }
+
+    public Mod.with_data_path(string path, int order = 0, string? data_path) {
         this.path = path;
         this.order = order;
         this.mod_file = File.new_for_path(path);
         this.name = this.mod_file.get_basename ();
         this.normalized_name = this.normalize_mod_name_for_linux(this.name);
+        if (data_path != null) this.installed = this.check_is_installed(data_path);
     }
 
     public string normalize_mod_name_for_linux(string st) {
@@ -65,6 +76,10 @@ public class Mod {
         }
         return false;
     }
+    public bool update_is_installed(string data_path) {
+        this.installed = this.check_is_installed(data_path);
+        return this.installed;
+    }
 
     public bool install(string data_path, string user_script_path) {
     // Installs "this" in "data_path". Installing means creating a symbolinc ling from "this" inside "data_mod" using the "this.normalized_name".
@@ -79,7 +94,7 @@ public class Mod {
             new_mod_file.make_symbolic_link(this.path);
         }
         this.add_user_scripts_line(user_script_path);
-        return this.check_is_installed(data_path);
+        return this.update_is_installed(data_path);
     }
 
     public bool uninstall(string data_path, string user_script_path) {
@@ -102,7 +117,7 @@ public class Mod {
             new_mod_file.delete(null);
         }
         this.remove_user_scripts_line(user_script_path);
-        return !this.check_is_installed(data_path);
+        return !this.update_is_installed(data_path);
     }
 
     public void add_user_scripts_line(string user_script_path) {
@@ -156,6 +171,35 @@ public class Mod {
         }
     }
 
+    public Gtk.Box get_ui() {
+    /// Returns the representation of this as a Gtk.Widget
+        Gtk.Box box = new Gtk.Box(Gtk.Orientation.HORIZONTAL, 0);
+        if (this.installed_switch == null) {
+            this.installed_switch = new Gtk.Switch();
+            this.installed_switch.set_active(this.installed);
+        } else {
+            this.installed_switch.set_active(this.installed);
+        }
+        if (this.order_entry == null) {
+            this.order_entry = new Gtk.Entry();
+            this.order_entry.set_text(this.order.to_string());
+            this.order_entry.set_width_chars(2);
+            this.order_entry.set_alignment(0.5f);
+        } else {
+            this.order_entry.set_text(this.order.to_string());
+        }
+        if (this.name_label == null) {
+            this.name_label = new Gtk.Label(this.name);
+            this.name_label.set_xalign(0);
+        } else {
+            this.name_label = new Gtk.Label(this.name);
+        }
+        box.pack_start(this.installed_switch, false, false, 10);
+        box.pack_start(this.order_entry, false, false, 10);
+        box.pack_start(this.name_label, true, true, 0);
+        return box;
+    }
+
 }
 
 public class ModManager {
@@ -165,9 +209,12 @@ public class ModManager {
     public string preferences_script_path;
     public string user_script_path;
     public string game_name;
+    public string sored_data_path;
     public Gee.ArrayList<Mod> mod_list;
     public Gee.ArrayList<string> game_pack_files;
     public Gee.ArrayList<string> excluded_mod_list;
+
+    public Gtk.ScrolledWindow mod_list_ui;
 
     public ModManager (string path, bool autoscan = true) {
         this.with_mods_path(path, path+"/data/mods", autoscan);
@@ -182,6 +229,8 @@ public class ModManager {
     }
 
     public ModManager.with_mods_and_scripts_path (string game_path, string mods_path, string? scripts_path, bool autoscan = true) {
+        this.sored_data_path = Environment.get_user_config_dir();
+
         this.game_path = game_path;
         this.data_path = game_path + "/data";
         this.mods_path = mods_path;
@@ -204,8 +253,46 @@ public class ModManager {
         }
     }
 
+    public void save_mod_list() {
+        // TODO
+    }
+
+    public void load_mod_list() {
+        // TODO
+    }
+
+    public Gtk.ScrolledWindow get_ui() {
+    /// Returns the representation of this as a Gtk.Widget
+        this.mod_list_ui = new Gtk.ScrolledWindow(null, null);
+        Gtk.Box box = new Gtk.Box(Gtk.Orientation.VERTICAL, 5);
+        foreach (Mod m in this.mod_list) {
+            box.pack_start(m.get_ui(), true, false, 2);
+        }
+        this.mod_list_ui.add(box);
+        return this.mod_list_ui;
+    }
+
+    public Gtk.ScrolledWindow update_ui() {
+    /// Returns the representation of this as a Gtk.Widget
+        if (this.mod_list_ui == null) mod_list_ui = new Gtk.ScrolledWindow(null, null);
+        else {
+            this.mod_list_ui.forall ((element) => {
+                if (!(element is Gtk.ScrolledWindow)) {
+                    this.mod_list_ui.remove(element);
+                }
+            });
+        }
+        Gtk.Box box = new Gtk.Box(Gtk.Orientation.VERTICAL, 5);
+        foreach (Mod m in this.mod_list) {
+            box.pack_start(m.get_ui(), true, false, 2);
+        }
+        this.mod_list_ui.add(box);
+        this.mod_list_ui.show_all();
+        return this.mod_list_ui;
+    }
+
     public string get_default_scripts_path() {
-        return Environment.get_home_dir()+".Creative Assembly/"+this.game_name+"/scripts";
+        return Environment.get_home_dir()+"/.Creative Assembly/"+this.game_name+"/scripts";
     }
 
     public void set_game_path(string path) {
@@ -224,6 +311,19 @@ public class ModManager {
         return this.mods_path;
     }
 
+    public void set_user_script_path(string path) {
+        this.preferences_script_path = path+"/preferences.script.txt";
+        this.user_script_path = path+"/user.script.txt";
+        File file = File.new_for_path (this.user_script_path);
+        if (!file.query_exists() && file.get_parent() != null && file.get_parent().query_exists()) {
+            file.create(FileCreateFlags.NONE);
+        }
+    }
+
+    public string get_user_script_path() {
+        return this.user_script_path.replace("user.script.txt", "");
+    }
+
     public void update_mods_list() {
     // Updates the list of mods stored in "this.mod_list" with the mods found in "this.mods_path"
         this.update_mods_list_from_path(this.mods_path);
@@ -234,8 +334,11 @@ public class ModManager {
         Gee.ArrayList<string> modlist = this.get_mods_list_from_path(path);
         this.mod_list = new Gee.ArrayList<Mod> ();
         int i = 0;
+        Mod m;
         foreach (string mod in modlist) {
-            this.mod_list.add(new Mod(mod, i));
+            m = new Mod.with_data_path(mod, i, this.data_path);
+            m.installed = this.check_mod_is_installed(m);
+            this.mod_list.add(m);
             i += 1;
         }
     }
@@ -328,6 +431,36 @@ public class ModManager {
     // If the file foun in "this.data_path" is not a symbolic link, it can not be uninstalled
     // Returns true if "mod" can be uinstalled. Otherwise returns false
         return mod.uninstall(this.data_path, this.user_script_path);
+    }
+
+    public void sort_mod_list() {
+    // Replaces this.mod_list with a sorted version of this.mod_list. Mods from this.mod_list are sorted by Mod.order
+        CompareDataFunc<Mod> cmpfunc = (a, b) => {
+		    return (a.order <= b.order)? -1 : 1;
+	    };
+	    this.mod_list.sort(cmpfunc);
+    }
+
+    public void update_installed_mods() {
+    // Check all mods from this.mod_list. If a mod "m" has "m.installed_switch" set to true, it is installed. Otherwise it is uninstalled.
+        int i = 0;
+        // Primer bucle per desinstalar-ho tot
+        foreach (Mod m in this.mod_list) {
+            m.order = int.parse(m.order_entry.get_text());
+            this.uninstall_mod(m);
+        }
+        // Segon bucle per instalar tot lo que toqui.
+        // Ho fem en 2 bucles perque en el de isntalar l'hem de recorre ordenat
+        this.sort_mod_list();
+        foreach (Mod m in this.mod_list) {
+            if (m.installed_switch == null) {
+                // DO NOTHING
+            } else if (m.installed_switch.state) {
+                this.install_mod(m);
+            } else {
+                // DO NOTHING
+            }
+        }
     }
 
 }

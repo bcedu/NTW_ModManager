@@ -11,6 +11,7 @@ namespace App.Configs {
 
         // ModManager settings
         public string default_game_path { get; set; }
+        public string default_user_script_path { get; set; }
 
         private static AppSettings _settings;
 

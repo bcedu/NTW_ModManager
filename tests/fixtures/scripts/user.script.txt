@@ -1,0 +1,9 @@
+mod this_is_a_mod_4.pack;
+mod this_is_a_mod.pack;
+mod this_is_a_mod_2.pack;
+mod this_is_a_mod_3.pack;
+mod this_is_a_mod_6.pack;
+mod this_is_a_mod_5.pack;
+mod this_is_a_mod_7.pack;
+mod this_is_a_mod_8.pack;
+mod this_is_a_mod_9.pack;

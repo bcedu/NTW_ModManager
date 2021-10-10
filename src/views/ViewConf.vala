@@ -7,10 +7,13 @@ namespace App.Views {
 
     public class ViewConf : AppView, VBox {
         private Gtk.Button conf_button;
+
         private Gtk.Entry current_game_path;
-        private Gtk.Label lb_current_game_path;
         private Gtk.Button edit_current_game_path;
-        private Gtk.FileChooserDialog file_chooser;
+
+        private Gtk.Entry current_scripts_path;
+        private Gtk.Button edit_current_scripts_path;
+
 
         public ViewConf (AppController controler) {
             conf_button = new Gtk.Button.from_icon_name ("open-menu-symbolic", Gtk.IconSize.BUTTON);
@@ -26,7 +29,7 @@ namespace App.Views {
             Box hbox = new Box(Orientation.HORIZONTAL, 0);
             this.pack_start (hbox, false, false, 10);
 
-            lb_current_game_path = new Gtk.Label(_("NTW path:"));
+            Gtk.Label lb_current_game_path = new Gtk.Label(_("Total War game path:"));
             hbox.pack_start (lb_current_game_path, false, false, 10);
 
             current_game_path = new Gtk.Entry();
@@ -36,6 +39,20 @@ namespace App.Views {
 
             edit_current_game_path = new Gtk.Button.from_icon_name ("folder-new", Gtk.IconSize.BUTTON);
             hbox.pack_start (edit_current_game_path, false, false, 10);
+
+            Box scripts_hbox = new Box(Orientation.HORIZONTAL, 0);
+            this.pack_start (scripts_hbox, false, false, 10);
+
+            Gtk.Label lb_current_scripts_path = new Gtk.Label(_("user.scripts.txt folder:"));
+            scripts_hbox.pack_start (lb_current_scripts_path, false, false, 10);
+
+            current_scripts_path = new Gtk.Entry();
+            current_scripts_path.editable = false;
+            if (controler.modmanager != null) current_scripts_path.set_text(controler.modmanager.get_user_script_path());
+            scripts_hbox.pack_start (current_scripts_path, true, true, 0);
+
+            edit_current_scripts_path = new Gtk.Button.from_icon_name ("folder-new", Gtk.IconSize.BUTTON);
+            scripts_hbox.pack_start (edit_current_scripts_path, false, false, 10);
 
             this.show_all();
         }
@@ -51,11 +68,11 @@ namespace App.Views {
                 }
             });
             edit_current_game_path.clicked.connect(() => {
-                this.file_chooser = new Gtk.FileChooserDialog (
-                    _("Select the path where Napoleon Total War is installed"), controler.window, Gtk.FileChooserAction.SELECT_FOLDER, _("Cancel"),
+                Gtk.FileChooserDialog file_chooser = new Gtk.FileChooserDialog (
+                    _("Select the path where Total War game is installed"), controler.window, Gtk.FileChooserAction.SELECT_FOLDER, _("Cancel"),
                     Gtk.ResponseType.CANCEL, _("Open"), Gtk.ResponseType.ACCEPT
                 );
-                this.file_chooser.response.connect((response) => {
+                file_chooser.response.connect((response) => {
                     if (response == Gtk.ResponseType.ACCEPT) {
                         string dir_selected = "";
                         string? sel = file_chooser.get_filename ();
@@ -72,12 +89,36 @@ namespace App.Views {
 
                 file_chooser.run ();
             });
+
+            edit_current_scripts_path.clicked.connect(() => {
+                Gtk.FileChooserDialog file_chooser = new Gtk.FileChooserDialog (
+                    _("Select the folder where user.scripts.txt file is located"), controler.window, Gtk.FileChooserAction.SELECT_FOLDER, _("Cancel"),
+                    Gtk.ResponseType.CANCEL, _("Open"), Gtk.ResponseType.ACCEPT
+                );
+                file_chooser.response.connect((response) => {
+                    if (response == Gtk.ResponseType.ACCEPT) {
+                        string dir_selected = "";
+                        string? sel = file_chooser.get_filename ();
+                        if (sel != null) {
+                            dir_selected = sel;
+                            controler.set_user_script_path(dir_selected);
+                            this.update_view(controler);
+                        }
+                        file_chooser.destroy ();
+                    } else {
+                        file_chooser.destroy();
+                    }
+                });
+
+                file_chooser.run ();
+            });
         }
 
         public void update_view(AppController controler) {
             controler.window.headerbar.back_button.set_label (_("Back"));
             conf_button.visible = false;
             if (controler.modmanager != null) current_game_path.set_text(controler.modmanager.get_game_path());
+            if (controler.modmanager != null) current_scripts_path.set_text(controler.modmanager.get_user_script_path());
         }
 
         public void update_view_on_hide(AppController controler) {

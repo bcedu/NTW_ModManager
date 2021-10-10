@@ -36,7 +36,10 @@ namespace App.Controllers {
             this.application = application;
             // init the mod manager if we have default path
             string default_path = this.get_default_path();
-            if (default_path != "") this.modmanager = new ModManager.with_mods_path(default_path, default_path+"/mods");
+            if (default_path != "") this.modmanager = new ModManager(default_path, false);
+            string default_user_script_path = this.get_user_script_path();
+            if (default_user_script_path != "") this.modmanager.set_user_script_path(default_user_script_path);
+            if (this.modmanager != null) this.modmanager.update_mods_list();
             // Create the main window
             this.window = new AppWindow (this.application);
             this.application.add_window (this.window);
@@ -111,8 +114,27 @@ namespace App.Controllers {
             return true;
         }
 
+        public bool set_user_script_path(string path) {
+            if (this.modmanager != null) {
+                this.modmanager.set_user_script_path(path);
+            }
+            AppSettings.get_default().default_user_script_path = path;
+            return true;
+        }
+
         public string get_default_path() {
             return AppSettings.get_default().default_game_path;
+        }
+
+        public string get_user_script_path() {
+            return AppSettings.get_default().default_user_script_path;
+        }
+
+        public void update_modmanager() {
+            if (this.modmanager != null) {
+                this.modmanager.update_mods_list();
+                this.modmanager.update_ui();
+            }
         }
 
     }

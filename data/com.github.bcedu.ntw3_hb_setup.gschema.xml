@@ -29,8 +29,13 @@
     </key>
     <key type="s" name="default-game-path">
       <default>""</default>
-      <summary>Path of NTW</summary>
-      <description>Path where Napoleon Total War is installed</description>
+      <summary>Path of TW</summary>
+      <description>Path where Total War is installed</description>
+    </key>
+    <key type="s" name="default-user-script-path">
+      <default>""</default>
+      <summary>Location of user.script.txt</summary>
+      <description>Path where user.script.txt file is located</description>
     </key>
 	</schema>
 </schemalist>
