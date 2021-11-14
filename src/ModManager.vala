@@ -171,6 +171,59 @@ public class Mod {
         }
     }
 
+    public void save_data(string stored_mods_data_path) {
+    // Stores the info of "this" that needs to be stored in "stored_mods_data_path"
+    // "stored_mods_data_path" is a csv file. The first columns is the path of the Mod and the second columns is it's current order
+    // If there is another line where the first column is the current Mod, it is relaced. Otherwise is added at the end of the file
+        File user_file = File.new_for_path (stored_mods_data_path);
+        if (!user_file.query_exists()) {
+            string err = "Error: file '"+stored_mods_data_path+"' does not exist, the mod '"+this.name+"'can not be saved.";
+            throw new Error(Quark.from_string(err), -1, err);
+        } else {
+            FileIOStream iostream = user_file.open_readwrite ();
+            DataInputStream reader = new DataInputStream (iostream.input_stream);
+            string? line = null;
+            string to_write = this.path+";"+this.order.to_string();
+            string to_search = this.path;
+            string to_delete = "";
+            string all_content = "";
+	        while ((line = reader.read_line ()) != null) {
+	            if (line.split(";")[0] == to_search) to_delete = line;
+	            all_content += line+"\n";
+	        }
+	        if (to_delete != "") {
+	            all_content = all_content.replace(to_delete+"\n", "");
+	            all_content = all_content.replace(to_delete, "");
+	        }
+	        all_content += to_write;
+            FileOutputStream ostream = user_file.replace (null, false, FileCreateFlags.NONE);
+	        DataOutputStream dostream = new DataOutputStream (ostream);
+	        dostream.put_string (all_content);
+        }
+    }
+
+    public void load_data(string stored_mods_data_path) {
+    // Updates "this" info from the data found in "stored_mods_data_path"
+    // "stored_mods_data_path" is a csv file. The first columns is the path of the Mod and the second columns is it's current order
+        File user_file = File.new_for_path (stored_mods_data_path);
+        if (!user_file.query_exists()) {
+            string err = "Error: file '"+stored_mods_data_path+"' does not exist, the mod '"+this.name+"'can not be loaded.";
+            throw new Error(Quark.from_string(err), -1, err);
+        } else {
+            FileIOStream iostream = user_file.open_readwrite ();
+            DataInputStream reader = new DataInputStream (iostream.input_stream);
+            string? line = null;
+            string to_search = this.path;
+	        while ((line = reader.read_line ()) != null) {
+	            if (line.split(";")[0] == to_search) {
+	                string[] mod_data = line.split(";");
+	                this.order = int.parse(mod_data[1]);
+	                if (this.order_entry != null) this.order_entry.set_text(this.order.to_string());
+	            }
+	        }
+        }
+    }
+
     public Gtk.Box get_ui() {
     /// Returns the representation of this as a Gtk.Widget
         Gtk.Box box = new Gtk.Box(Gtk.Orientation.HORIZONTAL, 0);
@@ -209,7 +262,8 @@ public class ModManager {
     public string preferences_script_path;
     public string user_script_path;
     public string game_name;
-    public string sored_data_path;
+    public string stored_data_path;
+    public string stored_mods_data_path;
     public Gee.ArrayList<Mod> mod_list;
     public Gee.ArrayList<string> game_pack_files;
     public Gee.ArrayList<string> excluded_mod_list;
@@ -229,7 +283,13 @@ public class ModManager {
     }
 
     public ModManager.with_mods_and_scripts_path (string game_path, string mods_path, string? scripts_path, bool autoscan = true) {
-        this.sored_data_path = Environment.get_user_config_dir();
+        File file;
+        this.stored_data_path = Environment.get_user_config_dir();
+        this.stored_mods_data_path = this.stored_data_path + "/" + App.Configs.Constants.ID;
+        file = File.new_for_path (this.stored_mods_data_path);
+        if (!file.query_exists() && file.get_parent() != null && file.get_parent().query_exists()) {
+            file.create(FileCreateFlags.NONE);
+        }
 
         this.game_path = game_path;
         this.data_path = game_path + "/data";
@@ -240,7 +300,7 @@ public class ModManager {
         if (scripts_path != null) aux = scripts_path;
         this.preferences_script_path = aux+"/preferences.script.txt";
         this.user_script_path = aux+"/user.script.txt";
-        File file = File.new_for_path (user_script_path);
+        file = File.new_for_path (user_script_path);
         if (!file.query_exists() && file.get_parent() != null && file.get_parent().query_exists()) {
             file.create(FileCreateFlags.NONE);
         }
@@ -254,11 +314,11 @@ public class ModManager {
     }
 
     public void save_mod_list() {
-        // TODO
-    }
-
-    public void load_mod_list() {
-        // TODO
+    // Stores the info of each Mod in this.mod_list that needs to be stored in this.stored_mods_data_path
+    // this.stored_mods_data_path is a csv file. The first columns is the path of the Mod and the second columns is it's current order
+        foreach (Mod m in this.mod_list) {
+            m.save_data(this.stored_mods_data_path);
+        }
     }
 
     public Gtk.ScrolledWindow get_ui() {
@@ -325,18 +385,22 @@ public class ModManager {
     }
 
     public void update_mods_list() {
-    // Updates the list of mods stored in "this.mod_list" with the mods found in "this.mods_path"
-        this.update_mods_list_from_path(this.mods_path);
+    // Updates the list of mods stored in "this.mod_list" with the mods found in "this.mods_path".
+    // Before updating it we store the current data of mods with this.save_mod_list
+        this.save_mod_list();
+        this.update_mods_list_from_path(this.mods_path, this.stored_mods_data_path);
     }
 
-    public void update_mods_list_from_path(string path) {
+    public void update_mods_list_from_path(string path, string? stored_mods_data_path = "") {
     // Updates the list of mods stored in this.mod_list with the mods found in "path"
+    // If "stored_mods_data_path" is given, before creating each mod we search stored info in "stored_mods_data_path"
         Gee.ArrayList<string> modlist = this.get_mods_list_from_path(path);
         this.mod_list = new Gee.ArrayList<Mod> ();
         int i = 0;
         Mod m;
         foreach (string mod in modlist) {
             m = new Mod.with_data_path(mod, i, this.data_path);
+            if (stored_mods_data_path != "") m.load_data(this.stored_mods_data_path);
             m.installed = this.check_mod_is_installed(m);
             this.mod_list.add(m);
             i += 1;
