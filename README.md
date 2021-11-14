@@ -1,16 +1,13 @@
-# ProgramaTest
+# Mod Manager for Napoleon Total War
 
 
 ## Installation
 
-### Elementary AppCenter
+### .deb package
 
-Install VServer through the elementary AppCenter. It's always updated to lastest version.
-Easy and fast.
 
-<p align="center">
-  <a href="https://appcenter.elementary.io/com.github.bcedu.ntw3_hb_setup"><img src="https://appcenter.elementary.io/badge.svg" alt="Get it on AppCenter" /></a>
-</p>
+Download the -deb file attached to the last release and install it as any .deb package
+
 
 ### Manual Instalation
 
