@@ -407,7 +407,7 @@ public class ModManager {
         }
     }
 
-    public Gee.ArrayList<string> get_mods_list_from_path(string path) {
+    public Gee.ArrayList<string> get_mods_list_from_path(string path, bool recursive = true) {
     // Returns a list of string with the relative path from "this.data_path" to any .pack file found in "path".
     // The main .pack files from NTW stored in "this.game_pack_files" are ignored as they are not mods.
     // The mods listed in "this.excluded_mod_list" (empty by default) are also excluded.
@@ -423,8 +423,14 @@ public class ModManager {
         FileInfo child_file_info = null;
 
         while (((child_file_info = enumerator.next_file (null)) != null)) {
+            print("\n--------------> Check file: "+child_file_info.get_name()+"\n");
             mod = new Mod(path+"/"+child_file_info.get_name());
             if (!this.check_mod_excluded(mod)) modlist.add(mod.get_relative_path(this.data_path));
+            else if (recursive && child_file_info.get_file_type() == FileType.DIRECTORY) {
+                foreach (string aux in this.get_mods_list_from_path(path+"/"+child_file_info.get_name())) {
+                    modlist.add(aux);
+                }
+            }
         }
         return modlist;
     }

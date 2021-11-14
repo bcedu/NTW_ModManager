@@ -1,4 +1,4 @@
-project('com.github.bcedu.tw.modmanager', 'c', 'vala', version: '1.0.0')
+project('com.github.bcedu.tw.modmanager', 'c', 'vala', version: '1.0.1')
 
 i18n = import('i18n')
 gnome = import('gnome')

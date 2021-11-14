@@ -93,7 +93,7 @@ class TestNTW : Gee.TestCase {
     }
 
     public void test_get_mods_list_from_path_ignores_game_files() {
-        Gee.ArrayList<string> aux = this.modmanager.get_mods_list_from_path(this.modmanager.data_path);
+        Gee.ArrayList<string> aux = this.modmanager.get_mods_list_from_path(this.modmanager.data_path, false);
         assert (aux.size == 1);
         Gee.ArrayList<string> expected = new Gee.ArrayList<string>();
         expected.add("this_is_a_mod_4.pack");

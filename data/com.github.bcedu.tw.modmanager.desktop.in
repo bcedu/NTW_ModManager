@@ -1,5 +1,5 @@
 [Desktop Entry]
-Name=com.github.bcedu.tw.modmanager
+Name=Total War Mod Manager
 Exec=com.github.bcedu.tw.modmanager
 Terminal=false
 Type=Application

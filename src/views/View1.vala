@@ -24,7 +24,7 @@ namespace App.Views {
                 controler.set_registered_view("view2");
             }
 
-            print("\n"+"Vista 1 començada"+"\n");
+            print("\n"+"Vista 1 començada!!!!"+"\n");
         }
 
         public string get_id() {
