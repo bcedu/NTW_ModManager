@@ -21,7 +21,7 @@ namespace App.Configs {
         }
 
         private AppSettings () throws Error {
-            base ("com.github.bcedu.ntw3_hb_setup.settings");
+            base (App.Configs.Constants.ID+".settings");
         }
     }
 

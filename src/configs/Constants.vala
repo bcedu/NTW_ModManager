@@ -25,9 +25,9 @@ namespace App.Configs {
      * @since 1.0.0
      */
     public class Constants {
-        public abstract const string ID = "com.github.bcedu.ntw3_hb_setup";
-        public abstract const string APP_ICON = "com.github.bcedu.ntw3_hb_setup";
+        public abstract const string ID = "com.github.bcedu.tw.modmanager";
+        public abstract const string APP_ICON = "com.github.bcedu.tw.modmanager";
         public abstract const string APP_NAME = _("Total War Mod Manager");
-        public abstract const string LAUNCHER_ID = "com.github.bcedu.ntw3_hb_setup.desktop";
+        public abstract const string LAUNCHER_ID = ID+".desktop";
     }
 }

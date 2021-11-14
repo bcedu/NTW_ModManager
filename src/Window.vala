@@ -82,7 +82,7 @@ namespace App {
             // Load CSS
             var provider = new Gtk.CssProvider();
             try {
-                provider.load_from_resource("/com/github/bcedu/resources/com.github.bcedu.ntw3_hb_setup.css");
+                provider.load_from_resource("/com/github/bcedu/resources/com.github.bcedu.tw.modmanager.css");
                 Gtk.StyleContext.add_provider_for_screen(Gdk.Screen.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION);
             } catch (Error e) {
                 stderr.printf("\nError: %s\n", e.message);

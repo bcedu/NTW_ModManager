@@ -16,7 +16,7 @@ echo "======================"
 echo "== Tests compiled!  =="
 echo "== Running tests... =="
 echo "======================"
-TESTDIR=`pwd`/tests .testbuild/bin/com.github.bcedu.ntw3_hb_setup
+TESTDIR=`pwd`/tests .testbuild/bin/com.github.bcedu.tw.modmanager
 mv meson.build test_meson.build
 mv old_meson.build meson.build
 rm -r `pwd`/.testbuild

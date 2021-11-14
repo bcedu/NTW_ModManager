@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist>
-	<schema id="com.github.bcedu.ntw3_hb_setup.settings" path="/com/github/bcedu/ntw3_hb_setup/settings/">
+	<schema id="com.github.bcedu.tw.modmanager.settings" path="/com/github/bcedu/tw/modmanager/settings/">
     <key type="i" name="window-width">
       <default>800</default>
       <summary>Window width</summary>

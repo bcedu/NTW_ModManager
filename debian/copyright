@@ -1,5 +1,5 @@
 Format: http://dep.debian.net/deps/dep5
-Upstream-Name: com.github.bcedu.ntw3_hb_setup
+Upstream-Name: com.github.bcedu.tw.modmanager
 Source: https://github.com/bcedu/NTW_ModManager
 
 Files: src/* data/* debian/*

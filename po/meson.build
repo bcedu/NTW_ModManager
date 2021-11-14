@@ -1,1 +1,1 @@
-i18n.gettext('ntw3_hb_setup', preset: 'glib')
+i18n.gettext('com.github.bcedu.tw.modmanager', preset: 'glib')

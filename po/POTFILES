@@ -1,6 +1,6 @@
-data/com.github.bcedu.ntw3_hb_setup.desktop.in
-data/com.github.bcedu.ntw3_hb_setup.appdata.xml.in
-data/com.github.bcedu.ntw3_hb_setup.gschema.xml
+data/com.github.bcedu.tw.modmanager.desktop.in
+data/com.github.bcedu.tw.modmanager.appdata.xml.in
+data/com.github.bcedu.tw.modmanager.gschema.xml
 src/configs/constants.vala
 src/widgets/header_bar.vala
 src/views/app_view.vala

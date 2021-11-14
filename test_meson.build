@@ -1,4 +1,4 @@
-project('com.github.bcedu.ntw3_hb_setup', 'c', 'vala', version: '1.0.0')
+project('com.github.bcedu.tw.modmanager', 'c', 'vala', version: '1.0.0')
 
 gnome = import('gnome')
 i18n = import('i18n')

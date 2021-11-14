@@ -1,6 +1,6 @@
 [Desktop Entry]
-Name=ntw3_hb_setup
-Exec=ntw3_hb_setup
+Name=com.github.bcedu.tw.modmanager
+Exec=com.github.bcedu.tw.modmanager
 Terminal=false
 Type=Application
 Categories=GTK;
