@@ -1,0 +1,17 @@
+Source: com.github.bcedu.ntw3_hb_setup
+Section: x11
+Priority: extra
+Maintainer: Eduard Berloso Clarà <eduard.bc.95@gmail.com>
+Build-Depends: debhelper (>= 9),
+               meson,
+               valac (>= 0.16),
+               libgtk-3-common,
+               libgranite-common,
+               libgee-0.8-2
+
+Standards-Version: 3.9.3
+Package: com.github.bcedu.ntw3_hb_setup
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: Mod Manager for Napoleon Total War.
+ Install and uninstal mods easaly on linux with this od manager.
